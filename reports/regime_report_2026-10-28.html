@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang='zh-CN'><head><meta charset='utf-8'><title>市场状态 2026-10-28</title><style>body{font-family:Segoe UI,sans-serif;max-width:980px;margin:32px auto;line-height:1.45}p{margin:4px 0}</style></head><body><p># 美股市场状态复盘 2026-10-28</p>
+<p>&nbsp;</p>
+<p>- 宽度来源：`tradermonty`</p>
+<p>- 波动率引擎：`OK`</p>
+<p>- 市场锚：`REGIME_1B_BULL_WITH_MACRO_HEADWIND` 带逆风牛市</p>
+<p>- 建议权益敞口：连续仓位，上限 75%（当前 75.0%）</p>
+<p>- SMA50 迟滞：ABOVE，ATR14 70.86，降档线 7680.55，升档线 7715.98，HV20 10.10%</p>
+<p>- 杠杆工具：2× SSO</p>
+<p>- 判定依据：HYG/IEF 低于 SMA50 且上升趋势占比低于 30%</p>
+<p>- 宽基指令：趋势仍在，但利率、美元或信贷宽度共振压制估值，权益上限锁定 75%。</p>
+<p>- 杠杆指令：杠杆倍数上限 2×，不使用 3× 产品。 实际上限 2× → SSO。HV20 10.1% &lt; 22%，方差损耗较低</p>
+<p>&nbsp;</p>
+<p>## 期权期限结构</p>
+<p>&nbsp;</p>
+<p>- Score_vol：-1.50</p>
+<p>- Z_TS(63)：0.58</p>
+<p>- R_TS：0.8798（前一日 0.8952）</p>
+<p>- R_Basis：0.9225</p>
+<p>- P_VVIX / P_SKEW：52.6 / 74.4</p>
+<p>- 因子：s1=0.0，s2=-1.5，s3=0.0，s4=0.0，s5=0.0</p>
+<p>- 倒挂去杠杆：否</p>
+<p>&nbsp;</p>
+<p>## 市场宽度</p>
+<p>&nbsp;</p>
+<p>- Score_breadth：71.4</p>
+<p>- 8MA / 200MA：58.7 / 60.8，5 日斜率 5.18</p>
+<p>- Uptrend Ratio：25.5%（GREEN，斜率 1.06）</p>
+<p>- RSP/SPY：0.2815</p>
+<p>- 进攻减防御：3.1 个百分点</p>
+<p>- 组件：spx_level=20.4，cross=10.0，uptrend=25.0，rsp_spy=8.0，off_def=8.0</p>
+<p>&nbsp;</p>
+<p>## 锚点顶背离</p>
+<p>&nbsp;</p>
+<p>- BEARISH_BREADTH_DIVERGENCE：`False`</p>
+<p>- 条件：BREADTH_DEATH_CROSS_OR_BEARISH_SIGNAL</p>
+<p>&nbsp;</p>
+<p>## 分标的指令</p>
+<p>&nbsp;</p>
+<p>| 标的 | 基准 | 基准收盘 | SMA50 | SMA200 | Regime | 敞口 | 波动率状态 | 顶背离 | 杠杆指令 |</p>
+<p>| --- | --- | ---: | ---: | ---: | --- | --- | --- | --- | --- |</p>
+<p>| SPY | ^GSPC | 7743.98 | 7698.27 | 7309.22 | REGIME_1B_BULL_WITH_MACRO_HEADWIND 带逆风牛市 | 连续仓位，上限 75% | ⏸ NEUTRAL | 否 | 杠杆倍数上限 2×，不使用 3× 产品。 实际上限 2× → SSO。HV20 10.1% &lt; 22%，方差损耗较低 |</p>
+<p>| QQQ | ^NDX | 29813.16 | 29815.70 | 27933.49 | REGIME_3_CORRECTION_HIGH_VOL 中期修正 / 期权倒挂震荡 | 20% ~ 40% | ⏸ NEUTRAL | 否 | 立即去杠杆，3× ETF 退出，只留 1× 或现金。 实际上限 1× → QQQ。修正或熊市状态本身不允许高于 1×；HV20 19.9% &lt; 22%，方差损耗较低 |</p>
+<p>| TQQQ | ^NDX | 29813.16 | 29815.70 | 27933.49 | REGIME_3_CORRECTION_HIGH_VOL 中期修正 / 期权倒挂震荡 | 20% ~ 40% | ⏸ NEUTRAL | 否 | 立即去杠杆，3× ETF 退出，只留 1× 或现金。 实际上限 1× → QQQ。修正或熊市状态本身不允许高于 1×；HV20 19.9% &lt; 22%，方差损耗较低 |</p>
+<p>| SOXL | SMH | 567.67 | 573.53 | 519.80 | REGIME_3_CORRECTION_HIGH_VOL 中期修正 / 期权倒挂震荡 | 20% ~ 40% | ⏸ NEUTRAL | 否 | 立即去杠杆，3× ETF 退出，只留 1× 或现金。 实际上限 1× → SMH。修正或熊市状态本身不允许高于 1×；HV20 38.6% &gt; 30%，禁止高于 1× 的日内重置杠杆 |</p>
+<p>&nbsp;</p>
+<p>## 约束</p>
+<p>&nbsp;</p>
+<p>- Score_vol 只来自 VIX 期限结构、近端基差、SKEW 与 VVIX 的滚动统计。</p>
+<p>- 价格趋势只作为执行门控：BUY DIP 在基准跌破 SMA200 时显示为 NO TRADE，分数不变。</p>
+<p>- Z-Score、百分位和均线都使用截至当日的滚动窗口，没有全样本拟合，也没有向后填充。</p>
+<p>&nbsp;</p>
+<p>规则化监测结果，不是投资建议。</p></body></html>
