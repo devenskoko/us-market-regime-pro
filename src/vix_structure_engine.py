@@ -12,9 +12,8 @@ import numpy as np
 import pandas as pd
 
 from src.config import (
-    COLLINEARITY_THRESHOLD,
-    COLLINEARITY_WINDOW,
     FACTOR_TICKERS,
+    PERCENTILE_MIN_VALID_FRACTION,
     PERCENTILE_WINDOW,
     READINESS_MIN_BARS,
     READINESS_TICKERS,
@@ -61,14 +60,18 @@ def rolling_percentile_rank(series: pd.Series, window: int = PERCENTILE_WINDOW) 
     """经验百分位秩，窗口闭区间含当日，取值 [0, 100]。"""
     values = pd.to_numeric(series, errors="coerce").to_numpy(dtype=float)
     out = np.full(len(values), np.nan)
+    min_valid = max(1, int(window * PERCENTILE_MIN_VALID_FRACTION))
     for end in range(window - 1, len(values)):
         sample = values[end - window + 1 : end + 1]
-        if not np.isfinite(sample).all():
-            continue
         current = sample[-1]
-        less = float(np.sum(sample < current))
-        equal = float(np.sum(sample == current))
-        out[end] = 100.0 * (less + 0.5 * equal) / float(window)
+        if not np.isfinite(current):
+            continue
+        valid = sample[np.isfinite(sample)]
+        if len(valid) < min_valid:
+            continue
+        less = float(np.sum(valid < current))
+        equal = float(np.sum(valid == current))
+        out[end] = 100.0 * (less + 0.5 * equal) / float(len(valid))
     return pd.Series(out, index=series.index)
 
 
@@ -138,22 +141,6 @@ def score_vol_components(
     }
     factors["score"] = float(sum(factors.values()))
     return factors
-
-
-def merge_collinear_factors(factors: dict[str, float], correlation: float) -> dict[str, float]:
-    """近端基差和期限比率高度共线时，只保留绝对值更大的那一项。"""
-    merged = dict(factors)
-    merged["collinearity"] = 0.0
-    if not np.isfinite(correlation) or correlation <= COLLINEARITY_THRESHOLD:
-        merged["score"] = float(merged["s1"] + merged["s2"] + merged["s3"] + merged["s4"] + merged["s5"])
-        return merged
-    if abs(merged["s1"]) >= abs(merged["s3"]):
-        merged["s3"] = 0.0
-    else:
-        merged["s1"] = 0.0
-    merged["collinearity"] = 1.0
-    merged["score"] = float(merged["s1"] + merged["s2"] + merged["s3"] + merged["s4"] + merged["s5"])
-    return merged
 
 
 def raw_signal_name(score: float) -> str:
@@ -300,8 +287,6 @@ def compute_vol_snapshot(prices: pd.DataFrame, asof_index: int | None = None) ->
         p_vvix=float(latest["p_vvix"]),
         p_skew=float(latest["p_skew"]),
     )
-    correlation = r_basis.rolling(COLLINEARITY_WINDOW, min_periods=COLLINEARITY_WINDOW).corr(r_ts).iloc[-1]
-    factors = merge_collinear_factors(factors, float(correlation) if np.isfinite(correlation) else np.nan)
     score = float(factors["score"])
     backwardation = bool(latest["r_ts"] > 1.00 and latest["z_ts"] > 1.0 and score < 5.0)
     return VolAssessment(

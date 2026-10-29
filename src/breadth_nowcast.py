@@ -49,16 +49,33 @@ def nowcast_breadth(
 
     broadened = breadth.copy()
     last = broadened.iloc[-1].copy()
-    for column in ("Breadth_Index_Raw", "Breadth_Index_8MA"):
-        if column in last.index and np.isfinite(last[column]):
-            last[column] = float(np.clip(float(last[column]) + delta, 0.0, 100.0))
+    if "Breadth_Index_Raw" in last.index and np.isfinite(last["Breadth_Index_Raw"]):
+        last["Breadth_Index_Raw"] = float(np.clip(float(last["Breadth_Index_Raw"]) + delta, 0.0, 100.0))
     broadened.loc[market_day] = last
+    raw_series = pd.to_numeric(broadened["Breadth_Index_Raw"], errors="coerce")
+    if "Breadth_Index_8MA" in broadened.columns:
+        broadened.loc[market_day, "Breadth_Index_8MA"] = float(raw_series.iloc[-8:].mean())
+    if "Breadth_Index_200MA" in broadened.columns and len(raw_series.dropna()) >= 200:
+        broadened.loc[market_day, "Breadth_Index_200MA"] = float(raw_series.iloc[-200:].mean())
+    if {"Breadth_Index_8MA", "Breadth_Index_200MA", "Bearish_Signal"}.issubset(broadened.columns):
+        broadened.loc[market_day, "Bearish_Signal"] = bool(
+            broadened.loc[market_day, "Breadth_Index_8MA"] < broadened.loc[market_day, "Breadth_Index_200MA"]
+        )
 
     updated = uptrend.copy()
     up_last = updated.iloc[-1].copy()
     if "ratio" in up_last.index and np.isfinite(up_last["ratio"]):
         up_last["ratio"] = float(np.clip(float(up_last["ratio"]) + delta, 0.0, 100.0))
     updated.loc[market_day] = up_last
+    ratio_series = pd.to_numeric(updated["ratio"], errors="coerce")
+    updated.loc[market_day, "ma10"] = float(ratio_series.iloc[-10:].mean())
+    step = 5 if len(ratio_series) >= 6 else 1
+    new_slope = float(ratio_series.diff(step).iloc[-1]) if len(ratio_series) >= 2 else 0.0
+    if not np.isfinite(new_slope):
+        new_slope = 0.0
+    updated.loc[market_day, "slope"] = new_slope
+    updated.loc[market_day, "trend"] = "up" if new_slope > 0 else "down"
+    updated.loc[market_day, "color"] = "GREEN" if new_slope > 0 else "RED"
     note = (
         f"T+0 宽度预估：CSV {breadth_day.date()} 早于行情 {market_day.date()}，"
         f"ΔBreadth={delta:+.2f} 个百分点（行业参与度变化与 RSP-SPY 超额收益）。"

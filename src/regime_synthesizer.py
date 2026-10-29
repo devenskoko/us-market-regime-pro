@@ -184,8 +184,8 @@ def classify_regime(
         return _decision(
             REGIME_1B,
             "带逆风牛市",
-            "连续仓位，上限 75%",
-            _clamp_exposure(exposure_unit, 20.0, 75.0, 75.0),
+            "60% ~ 75%",
+            _clamp_exposure(exposure_unit, 60.0, 75.0, 70.0),
             "趋势仍在，但利率、美元或信贷宽度共振压制估值，权益上限锁定 75%。",
             "杠杆倍数上限 2×，不使用 3× 产品。",
             macro_reason or "宏观分母端逆风",
@@ -195,8 +195,8 @@ def classify_regime(
         return _decision(
             REGIME_1,
             "强劲全面牛市",
-            "连续仓位，上限 100%",
-            _clamp_exposure(exposure_unit, 20.0, 100.0, 95.0),
+            "85% ~ 100%",
+            _clamp_exposure(exposure_unit, 85.0, 100.0, 95.0),
             "权益维持高仓，回撤参考底层 SMA20 或 SMA50。",
             "允许右侧顺势持有杠杆 ETF，追踪止损设在底层指数 SMA20 或 SMA50。",
             band_note,

@@ -79,6 +79,24 @@ def test_non_equity_print_does_not_extend_the_cash_session() -> None:
     assert index[2] not in out.index
 
 
+def test_vix_only_print_does_not_extend_the_cash_session() -> None:
+    index = pd.bdate_range("2024-01-02", periods=3)
+    frame = pd.DataFrame(
+        {
+            "^GSPC": [100.0, 101.0, np.nan],
+            "^VIX": [15.0, 16.0, 17.0],
+            "^VIX3M": [18.0, 19.0, np.nan],
+            "^NDX": [200.0, 201.0, np.nan],
+        },
+        index=index,
+    )
+    out = sanitize_prices(frame)
+    assert out.index[-1] == index[1]
+    assert out.loc[index[1], "^GSPC"] == 101.0
+    assert out.loc[index[1], "^VIX"] == 16.0
+    assert index[2] not in out.index
+
+
 def test_trailing_empty_session_is_dropped_before_forward_fill() -> None:
     index = pd.bdate_range("2024-01-02", periods=3)
     frame = pd.DataFrame({"^VIX": [1.0, 2.0, np.nan]}, index=index)
@@ -86,6 +104,17 @@ def test_trailing_empty_session_is_dropped_before_forward_fill() -> None:
     assert len(out) == 2
     assert out.index[-1] == index[1]
     assert out.iloc[-1, 0] == 2.0
+
+
+def test_skew_gap_one_hundred_days_ago_still_scores() -> None:
+    frame = _varying_market(400)
+    gap_end = len(frame) - 100
+    frame.iloc[gap_end - 2 : gap_end + 1, frame.columns.get_loc("^SKEW")] = np.nan
+    assert int(frame["^SKEW"].iloc[gap_end - 2 : gap_end + 1].isna().sum()) == 3
+    assert frame["^SKEW"].iloc[-99:].notna().all()
+    result = evaluate_vix_structure(frame, trend_is_bull=True)
+    assert result.status == "OK"
+    assert result.score is not None
 
 
 def test_day_260_unchanged_after_future_is_rewritten() -> None:

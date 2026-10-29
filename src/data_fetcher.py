@@ -73,11 +73,11 @@ def sanitize_prices(close: pd.DataFrame) -> pd.DataFrame:
     out.index = pd.DatetimeIndex(pd.to_datetime(out.index)).tz_localize(None).normalize()
     out = out[~out.index.duplicated(keep="last")].sort_index()
     out = out.apply(pd.to_numeric, errors="coerce")
-    clock = [ticker for ticker in READINESS_TICKERS if ticker in out.columns]
-    if clock:
-        has_cash_close = out[clock].notna().any(axis=1)
+    equity_clock = [ticker for ticker in ("^GSPC", "^NDX") if ticker in out.columns]
+    if equity_clock:
+        has_cash_close = out[equity_clock].notna().any(axis=1)
         if bool(has_cash_close.any()):
-            # 美元等近 24 小时品种不能把日历推到美股收盘之后。
+            # VIX 与美元可以在现金盘开盘前单独打印，不能把未收盘的交易日留在日历里。
             out = out.loc[: has_cash_close[has_cash_close].index[-1]]
     while len(out) and bool(out.iloc[-1].isna().all()):
         out = out.iloc[:-1]
@@ -319,10 +319,14 @@ def _stamp_index(frame: pd.DataFrame) -> pd.DataFrame:
     out.columns = [str(column) for column in out.columns]
     index = pd.DatetimeIndex(out.index)
     if index.tz is None:
-        index = index.tz_localize("America/New_York")
+        index = index.tz_localize("America/New_York").tz_localize(None)
     else:
-        index = index.tz_convert("America/New_York")
-    out.index = index.tz_localize(None).normalize()
+        midnight = bool((index.hour == 0).all() and (index.minute == 0).all())
+        if midnight:
+            index = index.tz_localize(None)
+        else:
+            index = index.tz_convert("America/New_York").tz_localize(None)
+    out.index = index.normalize()
     return out
 
 
